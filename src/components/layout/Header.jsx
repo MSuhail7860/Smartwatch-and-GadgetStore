@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X, Heart } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleCart } from '../../store/slices/cartSlice';
@@ -9,8 +9,23 @@ import { cn } from '../../utils/cn';
 
 export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const navigate = useNavigate();
     const cartItems = useSelector((state) => state.cart.items);
     const dispatch = useDispatch();
+
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+            setIsMenuOpen(false);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
 
     const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -41,14 +56,25 @@ export const Header = () => {
                                 type="text"
                                 placeholder="Search gadgets..."
                                 className="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent/50 transition-colors"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             />
-                            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                            <button
+                                onClick={handleSearch}
+                                className="absolute left-3 top-2.5 text-gray-400 hover:text-white transition-colors"
+                            >
+                                <Search className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
 
-                    <button className="p-2 text-gray-300 hover:text-white transition-colors relative">
+                    <Link
+                        to="/wishlist"
+                        className="p-2 text-gray-300 hover:text-white transition-colors relative"
+                    >
                         <Heart className="w-6 h-6" />
-                    </button>
+                    </Link>
 
                     <Link
                         to="/cart"

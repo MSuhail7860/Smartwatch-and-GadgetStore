@@ -1,13 +1,31 @@
 import React from 'react';
-import { ArrowRight, Star, Shield, Truck, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Star, Shield, Truck, CheckCircle, Heart, Activity, Eye } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../store/slices/cartSlice';
+import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { CATEGORIES, PRODUCTS } from '../data/mockData';
 
 export const HomePage = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const wishlistItems = useSelector((state) => state.wishlist.items);
     const featuredProducts = PRODUCTS.filter(p => p.isFeatured);
+
+    const isInWishlist = (productId) => wishlistItems.some(item => item.id === productId);
+
+    const toggleWishlist = (e, product) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isInWishlist(product.id)) {
+            dispatch(removeFromWishlist(product.id));
+        } else {
+            dispatch(addToWishlist(product));
+        }
+    };
 
     return (
         <div className="space-y-20 pb-20">
@@ -57,7 +75,7 @@ export const HomePage = () => {
                             <Card className="absolute -right-4 top-20 p-4 w-48 animate-pulse-slow">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
-                                        <HeartIcon />
+                                        <Heart className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-400">Heart Rate</p>
@@ -69,7 +87,7 @@ export const HomePage = () => {
                             <Card className="absolute -left-4 bottom-20 p-4 w-48 animate-pulse-slow delay-700">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
-                                        <ActivityIcon />
+                                        <Activity className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-400">Steps</p>
@@ -132,15 +150,43 @@ export const HomePage = () => {
                                 {product.isNew && (
                                     <Badge className="absolute top-4 left-4 z-10 bg-accent text-white border-none">New</Badge>
                                 )}
+                                <button
+                                    onClick={(e) => toggleWishlist(e, product)}
+                                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors"
+                                >
+                                    <Heart
+                                        className={`w-5 h-5 transition-colors ${isInWishlist(product.id)
+                                            ? "fill-red-500 text-red-500"
+                                            : "text-white"
+                                            }`}
+                                    />
+                                </button>
                                 <img
                                     src={product.image}
                                     alt={product.name}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                                    <Button size="sm" className="rounded-full">Add to Cart</Button>
-                                    <Button size="sm" variant="secondary" className="rounded-full px-3">
-                                        <EyeIcon className="w-5 h-5" />
+                                <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-4 z-20">
+                                    <Button
+                                        size="sm"
+                                        className="rounded-full shadow-lg"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            dispatch(addToCart(product));
+                                        }}
+                                    >
+                                        Add to Cart
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        className="rounded-full px-3 shadow-lg"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            navigate(`/products/${product.id}`);
+                                        }}
+                                    >
+                                        <Eye className="w-5 h-5" />
                                     </Button>
                                 </div>
                             </div>
@@ -205,22 +251,4 @@ export const HomePage = () => {
     );
 };
 
-// Helper Icons
-const HeartIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-    </svg>
-);
-
-const ActivityIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-    </svg>
-);
-
-const EyeIcon = ({ className }) => (
-    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-        <circle cx="12" cy="12" r="3" />
-    </svg>
-);
+// Helper Icons removed as we are using lucide-react icons now

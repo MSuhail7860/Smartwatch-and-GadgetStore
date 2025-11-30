@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Star, ShoppingCart } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { Star, ShoppingCart, Heart } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
+import { addToWishlist, removeFromWishlist } from '../../store/slices/wishlistSlice';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -10,6 +11,19 @@ import { Badge } from '../ui/Badge';
 
 export const ProductGrid = ({ products }) => {
     const dispatch = useDispatch();
+    const wishlistItems = useSelector((state) => state.wishlist.items);
+
+    const isInWishlist = (productId) => wishlistItems.some(item => item.id === productId);
+
+    const toggleWishlist = (e, product) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isInWishlist(product.id)) {
+            dispatch(removeFromWishlist(product.id));
+        } else {
+            dispatch(addToWishlist(product));
+        }
+    };
 
     if (products.length === 0) {
         return (
@@ -31,6 +45,17 @@ export const ProductGrid = ({ products }) => {
                             {product.isNew && (
                                 <Badge className="absolute top-4 left-4 z-10 bg-accent text-white border-none">New</Badge>
                             )}
+                            <button
+                                onClick={(e) => toggleWishlist(e, product)}
+                                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors"
+                            >
+                                <Heart
+                                    className={`w-5 h-5 transition-colors ${isInWishlist(product.id)
+                                            ? "fill-red-500 text-red-500"
+                                            : "text-white"
+                                        }`}
+                                />
+                            </button>
                             <img
                                 src={product.image}
                                 alt={product.name}
